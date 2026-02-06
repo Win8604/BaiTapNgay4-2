@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Products Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+  <div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2>Products Dashboard</h2>
+      <div>
+        <button id="exportBtn" class="btn btn-outline-success me-2">Export CSV</button>
+        <button id="createBtn" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">Tạo Item</button>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+      <div class="col-md-6">
+        <input id="search" class="form-control" placeholder="Tìm theo title..." />
+      </div>
+      <div class="col-md-3">
+        <select id="pageSize" class="form-select">
+          <option value="5">5 / trang</option>
+          <option value="10" selected>10 / trang</option>
+          <option value="20">20 / trang</option>
+        </select>
+      </div>
+      <div class="col-md-3 text-end">
+        <small id="infoText" class="text-muted"></small>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle" id="productsTable">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Title <button id="sortTitle" class="btn btn-sm btn-outline-secondary ms-1">Sắp xếp</button></th>
+            <th>Price <button id="sortPrice" class="btn btn-sm btn-outline-secondary ms-1">Sắp xếp</button></th>
+            <th>Category</th>
+            <th>Images</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows go here -->
+        </tbody>
+      </table>
+    </div>
+
+    <nav>
+      <ul id="pagination" class="pagination"></ul>
+    </nav>
+  </div>
+
+  <!-- View / Edit Modal -->
+  <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="viewTitle" class="modal-title">Item Detail</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="viewAlert"></div>
+          <form id="editForm">
+            <input type="hidden" id="editId" />
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input class="form-control" id="editTitle" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Price</label>
+              <input type="number" class="form-control" id="editPrice" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="editDescription" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Category ID</label>
+              <input type="number" class="form-control" id="editCategoryId" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Images (comma separated URLs)</label>
+              <input class="form-control" id="editImages" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="saveEdit" class="btn btn-success">Save</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Modal -->
+  <div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Tạo Item</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="createAlert"></div>
+          <form id="createForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Title</label>
+              <input class="form-control" id="createTitle" required />
+              <div class="invalid-feedback">Vui lòng nhập title.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Price</label>
+              <input type="number" class="form-control" id="createPrice" required min="0" />
+              <div class="invalid-feedback">Vui lòng nhập giá hợp lệ.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea class="form-control" id="createDescription" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Category ID</label>
+              <input type="number" class="form-control" id="createCategoryId" />
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Images (comma separated URLs)</label>
+              <input class="form-control" id="createImages" />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button id="saveCreate" type="submit" class="btn btn-primary" disabled>Create</button>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loadingOverlay" class="loading-overlay d-none">
+    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-body text-center" id="confirmMessage">Are you sure?</div>
+        <div class="modal-footer">
+          <button type="button" id="confirmCancel" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="confirmOk" class="btn btn-danger">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toasts -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080;">
+    <div id="toastContainer" class="toast-container"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
